@@ -1,5 +1,6 @@
 package jp.ac.example.xbrl;
 
+import jp.ac.example.xbrl.command.FetchListCommand;
 import jp.ac.example.xbrl.command.StatusCommand;
 import jp.ac.example.xbrl.config.AppConfig;
 import jp.ac.example.xbrl.db.DatabaseManager;
@@ -28,10 +29,14 @@ public class Main {
             System.exit(1);
         }
 
+        // サブコマンド以降の引数を渡す
         String command = args[0];
+        String[] subArgs = new String[args.length - 1];
+        System.arraycopy(args, 1, subArgs, 0, subArgs.length);
+
         switch (command) {
             case "status" -> new StatusCommand(dbManager).execute();
-            case "fetch-list" -> System.out.println("fetch-list: 未実装です。");
+            case "fetch-list" -> new FetchListCommand(config, dbManager).execute(subArgs);
             case "download" -> System.out.println("download: 未実装です。");
             case "parse-xbrl" -> System.out.println("parse-xbrl: 未実装です。");
             case "score-keywords" -> System.out.println("score-keywords: 未実装です。");
