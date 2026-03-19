@@ -1,5 +1,6 @@
 package jp.ac.example.xbrl;
 
+import jp.ac.example.xbrl.command.AnalyzeCommand;
 import jp.ac.example.xbrl.command.DownloadCommand;
 import jp.ac.example.xbrl.command.ExportCommand;
 import jp.ac.example.xbrl.command.FetchListCommand;
@@ -44,7 +45,7 @@ public class Main {
             case "download" -> new DownloadCommand(config, dbManager).execute(subArgs);
             case "parse-xbrl" -> new ParseXbrlCommand(config, dbManager).execute(subArgs);
             case "score-keywords" -> new ScoreKeywordsCommand(config, dbManager).execute(subArgs);
-            case "analyze" -> System.out.println("analyze: 未実装です。");
+            case "analyze" -> new AnalyzeCommand(config, dbManager).execute(subArgs);
             case "export" -> new ExportCommand(config, dbManager).execute(subArgs);
             default -> {
                 System.err.println("不明なコマンド: " + command);
