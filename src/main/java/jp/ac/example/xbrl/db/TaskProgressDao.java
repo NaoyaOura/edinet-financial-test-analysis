@@ -67,6 +67,23 @@ public class TaskProgressDao {
     }
 
     /**
+     * 指定書類・タスクが DONE かどうかを返す。
+     */
+    public boolean isDone(String docId, String task) throws SQLException {
+        String sql = "SELECT status FROM task_progress WHERE docId = ? AND task = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, docId);
+            ps.setString(2, task);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return "DONE".equals(rs.getString("status"));
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * タスク×ステータス別の件数を返す（status表示用）。
      */
     public List<ProgressSummary> summarize() throws SQLException {

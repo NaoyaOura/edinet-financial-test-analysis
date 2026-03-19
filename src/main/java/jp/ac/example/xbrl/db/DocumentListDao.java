@@ -61,6 +61,29 @@ public class DocumentListDao {
     }
 
     /**
+     * EDINETコードを指定して書類一覧を取得する。
+     */
+    public List<DocumentRecord> findByEdinetCode(String edinetCode) throws SQLException {
+        String sql = "SELECT * FROM document_list WHERE edinetCode = ? ORDER BY submissionDate";
+        List<DocumentRecord> results = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, edinetCode);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new DocumentRecord(
+                        rs.getString("docId"),
+                        rs.getString("edinetCode"),
+                        (Integer) rs.getObject("fiscalYear"),
+                        rs.getString("submissionDate"),
+                        rs.getString("docDescription")
+                    ));
+                }
+            }
+        }
+        return results;
+    }
+
+    /**
      * 全件数を返す。
      */
     public int count() throws SQLException {

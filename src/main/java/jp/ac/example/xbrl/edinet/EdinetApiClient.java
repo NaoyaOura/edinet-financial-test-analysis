@@ -44,6 +44,50 @@ public class EdinetApiClient {
     }
 
     /**
+     * 指定書類IDのZIPファイルをバイト配列で取得する。
+     * @param docId EDINET書類ID
+     * @return ZIPファイルのバイト配列
+     */
+    public byte[] fetchDocumentZip(String docId) throws IOException, InterruptedException {
+        String url = String.format("%s/documents/%s?type=5&Subscription-Key=%s",
+            BASE_URL, docId, apiKey);
+        return getBytesWithRetry(url);
+    }
+
+    /**
+     * 指定URLにGETリクエストを送り、レスポンスをバイト配列で返す。
+     * 4xx/5xx の場合は最大MAX_RETRY回リトライする。
+     */
+    private byte[] getBytesWithRetry(String url) throws IOException, InterruptedException {
+        IOException lastException = null;
+
+        for (int attempt = 1; attempt <= MAX_RETRY; attempt++) {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(120))
+                .GET()
+                .build();
+
+            HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+            if (response.statusCode() == 200) {
+                return response.body();
+            }
+
+            long waitMs = response.statusCode() == 429 ? RETRY_INTERVAL_MS * 5 : RETRY_INTERVAL_MS;
+            lastException = new IOException(
+                String.format("EDINET API エラー: HTTPステータス %d (試行 %d/%d) URL=%s",
+                    response.statusCode(), attempt, MAX_RETRY, url)
+            );
+
+            if (attempt < MAX_RETRY) {
+                Thread.sleep(waitMs);
+            }
+        }
+        throw lastException;
+    }
+
+    /**
      * 指定URLにGETリクエストを送り、レスポンスをJsonNodeで返す。
      * 4xx/5xx の場合は最大MAX_RETRY回リトライする。
      */

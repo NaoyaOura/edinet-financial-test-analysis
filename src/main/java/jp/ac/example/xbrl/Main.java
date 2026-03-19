@@ -1,5 +1,6 @@
 package jp.ac.example.xbrl;
 
+import jp.ac.example.xbrl.command.DownloadCommand;
 import jp.ac.example.xbrl.command.FetchListCommand;
 import jp.ac.example.xbrl.command.StatusCommand;
 import jp.ac.example.xbrl.config.AppConfig;
@@ -37,7 +38,7 @@ public class Main {
         switch (command) {
             case "status" -> new StatusCommand(dbManager).execute();
             case "fetch-list" -> new FetchListCommand(config, dbManager).execute(subArgs);
-            case "download" -> System.out.println("download: 未実装です。");
+            case "download" -> new DownloadCommand(config, dbManager).execute(subArgs);
             case "parse-xbrl" -> System.out.println("parse-xbrl: 未実装です。");
             case "score-keywords" -> System.out.println("score-keywords: 未実装です。");
             case "analyze" -> System.out.println("analyze: 未実装です。");
