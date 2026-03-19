@@ -319,6 +319,9 @@ if (apiKey == null || apiKey.isBlank()) {
 |---|---|
 | 書類一覧取得 | `GET /api/v2/documents.json?date={date}&type=2&Subscription-Key={key}` |
 | 書類取得（ZIP） | `GET /api/v2/documents/{docID}?type=5&Subscription-Key={key}` |
+| 企業情報一覧取得 | `GET /api/v2/companies.json?type=3&Subscription-Key={key}` |
+
+> **注意**: 書類一覧 API のレスポンスには `industryCode` が含まれない。業種コードは企業情報 API から取得した `edinetCode` ↔ `industryCode` マップを参照する。
 
 ### 8-3. レート制限・エラーハンドリング
 
