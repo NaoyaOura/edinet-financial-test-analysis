@@ -1,0 +1,62 @@
+package jp.ac.example.xbrl;
+
+import jp.ac.example.xbrl.command.StatusCommand;
+import jp.ac.example.xbrl.config.AppConfig;
+import jp.ac.example.xbrl.db.DatabaseManager;
+
+/**
+ * エントリーポイント。
+ * 第1引数をサブコマンド名として受け取り、対応するCommandクラスに処理を委譲する。
+ */
+public class Main {
+
+    public static void main(String[] args) {
+        if (args.length == 0) {
+            printHelp();
+            System.exit(1);
+        }
+
+        // 環境変数の検証（APIキー未設定時はここで終了）
+        AppConfig config = AppConfig.getInstance();
+
+        // DBの初期化
+        DatabaseManager dbManager = new DatabaseManager(config.getDbPath());
+        try {
+            dbManager.initializeSchema();
+        } catch (Exception e) {
+            System.err.println("データベースの初期化に失敗しました: " + e.getMessage());
+            System.exit(1);
+        }
+
+        String command = args[0];
+        switch (command) {
+            case "status" -> new StatusCommand(dbManager).execute();
+            case "fetch-list" -> System.out.println("fetch-list: 未実装です。");
+            case "download" -> System.out.println("download: 未実装です。");
+            case "parse-xbrl" -> System.out.println("parse-xbrl: 未実装です。");
+            case "score-keywords" -> System.out.println("score-keywords: 未実装です。");
+            case "analyze" -> System.out.println("analyze: 未実装です。");
+            case "export" -> System.out.println("export: 未実装です。");
+            default -> {
+                System.err.println("不明なコマンド: " + command);
+                printHelp();
+                System.exit(1);
+            }
+        }
+    }
+
+    private static void printHelp() {
+        System.out.println("""
+            使い方: mvn exec:java -Dexec.args="<コマンド> [オプション]"
+
+            利用可能なコマンド:
+              fetch-list      EDINET書類一覧を取得してDBに保存
+              download        書類ZIPをダウンロード・展開
+              parse-xbrl      XBRLをパースして財務指標をDBに保存
+              score-keywords  テキストからキーワードスコアを算出してDBに保存
+              analyze         統計分析を実行してレポートを出力
+              export          SQLiteのデータをCSV出力
+              status          各フェーズの進捗状況を表示
+            """);
+    }
+}

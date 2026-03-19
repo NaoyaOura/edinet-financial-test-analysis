@@ -3,7 +3,22 @@
     "allow": [
       "Bash(python:*)",
       "Bash(where python:*)",
-      "Bash(where python3:*)"
+      "Bash(where python3:*)",
+      "Bash(mvn compile:*)",
+      "Bash(where mvn:*)",
+      "Read(//c/Users/大浦直也-NaoyaOura/AppData/Local/Programs//**)",
+      "Read(//c/Program Files//**)",
+      "Bash(java:*)",
+      "Bash(find /c/Users/大浦直也-NaoyaOura/AppData/Roaming/JetBrains -name *.properties)",
+      "Bash(find /c/Users/大浦直也-NaoyaOura -name mvn -not -path */.git/*)",
+      "Bash(find /c/Users/大浦直也-NaoyaOura/AppData/Local/JetBrains/Toolbox/scripts -name *.sh)",
+      "Bash(JAVA_HOME=\"/c/Users/大浦直也-NaoyaOura/AppData/Local/Programs/IntelliJ IDEA/jbr\")",
+      "Bash(MVN=\"/c/Users/大浦直也-NaoyaOura/AppData/Local/Programs/IntelliJ IDEA/plugins/maven/lib/maven3/bin/mvn\")",
+      "Bash(\"$MVN\" compile:*)",
+      "Bash(export JAVA_HOME=\"C:/Users/大浦直也-NaoyaOura/AppData/Local/Programs/IntelliJ IDEA/jbr\")",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
+      "Bash(MVN=\"C:/Users/大浦直也-NaoyaOura/AppData/Local/Programs/IntelliJ IDEA/plugins/maven/lib/maven3/bin/mvn\")",
+      "Bash(\"$MVN\" test:*)"
     ]
   }
 }
