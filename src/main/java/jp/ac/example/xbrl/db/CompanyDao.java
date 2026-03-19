@@ -19,23 +19,35 @@ public class CompanyDao {
     }
 
     /**
-     * 企業を登録する。既存の場合は上書きする。
+     * 企業を登録する。既存の場合は企業名のみ更新し、業種情報は上書きしない。
      */
-    public void upsert(String edinetCode, String companyName, String industryCode, String industryCategory)
-            throws SQLException {
+    public void upsert(String edinetCode, String companyName) throws SQLException {
         String sql = """
             INSERT INTO companies (edinetCode, companyName, industryCode, industryCategory)
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, '', 'UNKNOWN')
             ON CONFLICT(edinetCode) DO UPDATE SET
-                companyName = excluded.companyName,
-                industryCode = excluded.industryCode,
-                industryCategory = excluded.industryCategory
+                companyName = excluded.companyName
         """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, edinetCode);
             ps.setString(2, companyName);
-            ps.setString(3, industryCode);
-            ps.setString(4, industryCategory);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * 業種情報のみ更新する。parse-xbrl フェーズで XBRL から取得した値を反映する。
+     */
+    public void updateIndustry(String edinetCode, String industryCode, String industryCategory)
+            throws SQLException {
+        String sql = """
+            UPDATE companies SET industryCode = ?, industryCategory = ?
+            WHERE edinetCode = ?
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, industryCode);
+            ps.setString(2, industryCategory);
+            ps.setString(3, edinetCode);
             ps.executeUpdate();
         }
     }

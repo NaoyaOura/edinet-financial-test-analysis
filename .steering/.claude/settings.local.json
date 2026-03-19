@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/大浦直也-NaoyaOura/Box/井上ゼミ/大浦さん/20_研究活動/@XBRL調査/**)",
+      "Bash(mvn compile:*)"
+    ]
+  }
+}

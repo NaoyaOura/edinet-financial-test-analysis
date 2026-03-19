@@ -94,6 +94,35 @@ public class XbrlParser {
     }
 
     /**
+     * XBRLファイルから業種コードを抽出する。
+     * DEI（書類の書誌情報）セクションの IndustryCategoryCode 要素を探す。
+     *
+     * @param xbrlFile パース対象のXBRLファイル
+     * @return 業種コード（例: "6100"）。見つからない場合は空文字
+     */
+    public String extractIndustryCode(File xbrlFile) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+
+        Document doc = factory.newDocumentBuilder().parse(xbrlFile);
+        doc.getDocumentElement().normalize();
+
+        NodeList allElements = doc.getDocumentElement().getChildNodes();
+        for (int i = 0; i < allElements.getLength(); i++) {
+            if (!(allElements.item(i) instanceof Element el)) continue;
+            String localName = el.getLocalName();
+            if (localName == null) continue;
+            // EDINET XBRL では IndustryCategoryCode または IndustryCategoryCodeDEI に業種コードが格納される
+            if (localName.equals("IndustryCategoryCode") || localName.equals("IndustryCategoryCodeDEI")) {
+                String value = el.getTextContent().trim();
+                if (!value.isEmpty()) return value;
+            }
+        }
+        return "";
+    }
+
+    /**
      * 指定ディレクトリ配下から最初に見つかった .xbrl ファイルを返す。
      * 見つからない場合は null を返す。
      */

@@ -60,6 +60,18 @@ public class FinancialDataExtractor {
     }
 
     /**
+     * 展開済み書類ディレクトリから業種コードを抽出する。
+     *
+     * @param docDir data/raw/{docId}/ ディレクトリ
+     * @return 業種コード（例: "6100"）。XBRLが見つからない場合や要素がない場合は空文字
+     */
+    public String extractIndustryCode(File docDir) throws Exception {
+        File xbrlFile = parser.findXbrlFile(docDir);
+        if (xbrlFile == null) return "";
+        return parser.extractIndustryCode(xbrlFile);
+    }
+
+    /**
      * 複数の候補キーから最初に見つかった値を返す。見つからない場合は null。
      */
     private Double get(Map<String, Double> values, String... keys) {

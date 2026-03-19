@@ -30,7 +30,8 @@
       "Bash(cmd /c \"mvn --version\" 2>&1)",
       "Bash(cmd /c \"set PATH && echo --- && mvn --version\")",
       "Bash(\"/c/Users/大浦直也-NaoyaOura/AppData/Local/Programs/IntelliJ IDEA/plugins/maven/lib/maven3/bin/mvn\" test)",
-      "Bash(JAVA_HOME=\"/c/Users/大浦直也-NaoyaOura/.jdks/ms-17.0.18\" \"/c/Users/大浦直也-NaoyaOura/AppData/Local/Programs/IntelliJ IDEA/plugins/maven/lib/maven3/bin/mvn\" test)"
+      "Bash(JAVA_HOME=\"/c/Users/大浦直也-NaoyaOura/.jdks/ms-17.0.18\" \"/c/Users/大浦直也-NaoyaOura/AppData/Local/Programs/IntelliJ IDEA/plugins/maven/lib/maven3/bin/mvn\" test)",
+      "WebFetch(domain:disclosure2dl.edinet-fsa.go.jp)"
     ]
   }
 }

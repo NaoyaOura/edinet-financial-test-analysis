@@ -1,11 +1,13 @@
 package jp.ac.example.xbrl.command;
 
 import jp.ac.example.xbrl.config.AppConfig;
+import jp.ac.example.xbrl.db.CompanyDao;
 import jp.ac.example.xbrl.db.DatabaseManager;
 import jp.ac.example.xbrl.db.DocumentListDao;
 import jp.ac.example.xbrl.db.FinancialDataDao;
 import jp.ac.example.xbrl.db.TaskProgressDao;
 import jp.ac.example.xbrl.db.FinancialDataDao.FinancialRecord;
+import jp.ac.example.xbrl.edinet.IndustryClassifier;
 import jp.ac.example.xbrl.xbrl.FinancialDataExtractor;
 import jp.ac.example.xbrl.xbrl.XbrlParser;
 
@@ -62,6 +64,15 @@ public class ParseXbrlCommand {
 
                 try (Connection conn = dbManager.getConnection()) {
                     new FinancialDataDao(conn).upsert(record);
+                }
+
+                // 業種コードを XBRL から抽出して companies テーブルを更新
+                String industryCode = extractor.extractIndustryCode(docDir);
+                if (!industryCode.isBlank()) {
+                    String industryCategory = IndustryClassifier.classify(industryCode);
+                    try (Connection conn = dbManager.getConnection()) {
+                        new CompanyDao(conn).updateIndustry(doc.edinetCode(), industryCode, industryCategory);
+                    }
                 }
 
                 updateProgress(doc.docId(), TaskProgressDao.Status.DONE, null);

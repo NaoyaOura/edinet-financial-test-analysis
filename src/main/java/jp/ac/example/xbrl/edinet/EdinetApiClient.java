@@ -28,6 +28,7 @@ public class EdinetApiClient {
         this.apiKey = apiKey;
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(30))
+            .followRedirects(java.net.http.HttpClient.Redirect.ALWAYS)
             .build();
         this.objectMapper = new ObjectMapper();
     }
@@ -40,18 +41,6 @@ public class EdinetApiClient {
     public JsonNode fetchDocumentList(String date) throws IOException, InterruptedException {
         String url = String.format("%s/documents.json?date=%s&type=2&Subscription-Key=%s",
             BASE_URL, date, apiKey);
-        return getWithRetry(url);
-    }
-
-    /**
-     * 全上場企業の企業情報一覧を取得する。
-     * レスポンスの results 配列に edinetCode・industryCode 等が含まれる。
-     *
-     * @return レスポンスのルートJsonNode
-     */
-    public JsonNode fetchCompanyList() throws IOException, InterruptedException {
-        String url = String.format("%s/companies.json?type=3&Subscription-Key=%s",
-            BASE_URL, apiKey);
         return getWithRetry(url);
     }
 
@@ -121,9 +110,10 @@ public class EdinetApiClient {
 
             // レート制限（429）はより長く待つ
             long waitMs = response.statusCode() == 429 ? RETRY_INTERVAL_MS * 5 : RETRY_INTERVAL_MS;
+            String location = response.headers().firstValue("Location").orElse("(なし)");
             lastException = new IOException(
-                String.format("EDINET API エラー: HTTPステータス %d (試行 %d/%d) URL=%s",
-                    response.statusCode(), attempt, MAX_RETRY, url)
+                String.format("EDINET API エラー: HTTPステータス %d (試行 %d/%d) URL=%s Location=%s",
+                    response.statusCode(), attempt, MAX_RETRY, url, location)
             );
 
             if (attempt < MAX_RETRY) {
