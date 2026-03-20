@@ -318,7 +318,7 @@ if (apiKey == null || apiKey.isBlank()) {
 | 用途 | エンドポイント |
 |---|---|
 | 書類一覧取得 | `GET /api/v2/documents.json?date={date}&type=2&Subscription-Key={key}` |
-| 書類取得（ZIP） | `GET /api/v2/documents/{docID}?type=5&Subscription-Key={key}` |
+| 書類取得（ZIP） | `GET /api/v2/documents/{docID}?type=1&Subscription-Key={key}` |
 
 > **注意**: 書類一覧 API のレスポンスには `industryCode` が含まれない。業種コードは `parse-xbrl` フェーズで XBRL ファイル内の `IndustryCategoryCode` 要素から取得し、`companies` テーブルを更新する。
 

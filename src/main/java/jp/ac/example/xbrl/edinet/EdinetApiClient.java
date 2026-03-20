@@ -50,7 +50,7 @@ public class EdinetApiClient {
      * @return ZIPファイルのバイト配列
      */
     public byte[] fetchDocumentZip(String docId) throws IOException, InterruptedException {
-        String url = String.format("%s/documents/%s?type=5&Subscription-Key=%s",
+        String url = String.format("%s/documents/%s?type=1&Subscription-Key=%s",
             BASE_URL, docId, apiKey);
         return getBytesWithRetry(url);
     }

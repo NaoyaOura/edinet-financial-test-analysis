@@ -56,16 +56,16 @@ mvn compile
 
 ## 使い方
 
-各処理フェーズは独立したコマンドとして実行できます。
+各処理フェーズは独立したコマンドとして実行できます。通常は以下の順に実行します。
 
 ```bash
-# 1. 書類一覧を取得（業種コードに基づき RETAIL / IT / UNKNOWN を自動分類）
+# 1. 書類一覧を取得
 mvn exec:java -Dexec.args="fetch-list --year 2023"
 
 # 2. 書類をダウンロード（未取得分のみ）
 mvn exec:java -Dexec.args="download --year 2023"
 
-# 3. 財務データをパース
+# 3. 財務データをパース（業種コードも XBRL から取得）
 mvn exec:java -Dexec.args="parse-xbrl --year 2023"
 
 # 4. キーワードスコアを算出
@@ -82,38 +82,116 @@ mvn exec:java -Dexec.args="status"
 ```
 
 途中で失敗した場合は同じコマンドを再実行すると、完了済みの書類をスキップして続きから処理します。
-強制的に再処理する場合は `--force` オプションを追加してください。
 
-### analyze オプション
+---
+
+## コマンドリファレンス
+
+### fetch-list
+
+EDINET API から書類一覧を取得して DB に登録します。
 
 ```bash
-# 分析種別を指定（デフォルト: all）
+mvn exec:java -Dexec.args="fetch-list --year <年度>"
+```
+
+| オプション | 必須 | 説明 |
+|---|---|---|
+| `--year <年度>` | ✅ | 対象年度（例: `2023` → 2023-04-01〜2024-03-31） |
+
+### download
+
+書類 ZIP をダウンロードして展開します。完了済みはスキップします。
+
+```bash
+mvn exec:java -Dexec.args="download [--year <年度>] [--edinet-code <コード>] [--force]"
+```
+
+| オプション | 必須 | 説明 |
+|---|---|---|
+| `--year <年度>` | | 対象年度に絞り込み |
+| `--edinet-code <コード>` | | 特定企業のみ対象（例: `E01234`） |
+| `--force` | | 完了済みも再ダウンロード |
+
+### parse-xbrl
+
+XBRL をパースして財務指標を DB に保存します。同時に業種コードを XBRL から取得して企業マスタを更新します。
+
+```bash
+mvn exec:java -Dexec.args="parse-xbrl [--year <年度>] [--edinet-code <コード>] [--force]"
+```
+
+| オプション | 必須 | 説明 |
+|---|---|---|
+| `--year <年度>` | | 対象年度に絞り込み |
+| `--edinet-code <コード>` | | 特定企業のみ対象 |
+| `--force` | | 完了済みも再パース |
+
+### score-keywords
+
+XBRL テキストからキーワードスコアを算出して DB に保存します。
+
+```bash
+mvn exec:java -Dexec.args="score-keywords [--year <年度>] [--edinet-code <コード>] [--force]"
+```
+
+| オプション | 必須 | 説明 |
+|---|---|---|
+| `--year <年度>` | | 対象年度に絞り込み |
+| `--edinet-code <コード>` | | 特定企業のみ対象 |
+| `--force` | | 完了済みも再算出 |
+
+### analyze
+
+統計分析を実行します。
+
+```bash
+mvn exec:java -Dexec.args="analyze [--type <分析種別>] [--year <年度>]"
+```
+
+| オプション | 必須 | 説明 |
+|---|---|---|
+| `--type <種別>` | | `group-comparison` / `lag-regression` / `did` / `panel` / `all`（デフォルト: `all`） |
+| `--year <年度>` | | 特定年度のみで分析 |
+
+```bash
 mvn exec:java -Dexec.args="analyze --type group-comparison"  # グループ比較
 mvn exec:java -Dexec.args="analyze --type lag-regression"    # ラグ回帰分析（メイン）
 mvn exec:java -Dexec.args="analyze --type did"               # 差分の差分法
 mvn exec:java -Dexec.args="analyze --type panel"             # 固定効果モデル
-
-# 特定年度のみで分析
-mvn exec:java -Dexec.args="analyze --type group-comparison --year 2023"
 ```
 
-### export オプション
+### export
+
+分析結果を CSV に出力します。
 
 ```bash
-# 出力種別を指定（デフォルト: all）
-mvn exec:java -Dexec.args="export --type financial"  # 財務指標CSVのみ
-mvn exec:java -Dexec.args="export --type keywords"   # キーワードスコアCSVのみ
-mvn exec:java -Dexec.args="export --type merged"     # 統合CSV（分析用メインデータ）
+mvn exec:java -Dexec.args="export [--type <出力種別>] [--year <年度>] [--output <出力先>]"
+```
 
-# 年度・出力先を指定
+| オプション | 必須 | 説明 |
+|---|---|---|
+| `--type <種別>` | | `financial` / `keywords` / `merged` / `all`（デフォルト: `all`） |
+| `--year <年度>` | | 対象年度に絞り込み |
+| `--output <パス>` | | 出力先ディレクトリ（デフォルト: `./output`） |
+
+```bash
 mvn exec:java -Dexec.args="export --type merged --year 2023 --output ./results"
+```
+
+### status
+
+各タスクの処理進捗を表示します。
+
+```bash
+mvn exec:java -Dexec.args="status"
 ```
 
 ---
 
 ## 業種分類
 
-`fetch-list` 実行時に EDINET API の `industryCode`（東証33業種コード）を取得し、以下のルールで自動分類します。
+`parse-xbrl` 実行時に XBRL ファイル内の業種コード（東証33業種コード）を取得し、以下のルールで自動分類します。
 
 | 東証33業種コード | 業種名 | 本ツールでの分類 |
 |---|---|---|
