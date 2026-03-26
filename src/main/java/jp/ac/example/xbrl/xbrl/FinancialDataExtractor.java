@@ -46,16 +46,23 @@ public class FinancialDataExtractor {
             get(values, "Equity", "NetAssets"),
             get(values, "CashAndDeposits", "CashAndCashEquivalents"),
             get(values, "Inventories"),
-            get(values, "SellingGeneralAdministrativeExpenses"),
-            get(values, "PersonnelExpenses", "WagesAndSalaries"),
+            // EDINET XBRL は "SellingGeneralAndAdministrativeExpenses"（"And" あり）を使用する
+            get(values, "SellingGeneralAndAdministrativeExpenses", "SellingGeneralAdministrativeExpenses"),
+            // EDINET XBRL は "SalariesAndAllowancesSGA" を使用する
+            get(values, "SalariesAndAllowancesSGA", "PersonnelExpenses", "WagesAndSalaries"),
             getInt(values, "NumberOfEmployees"),
             get(values, "ResearchAndDevelopmentExpenses"),
             get(values, "Software"),
             get(values, "IntangibleAssets"),
+            // EDINET XBRL はキャッシュフロー計算書の要素に "InvCF" サフィックスが付く
             get(values, "PurchaseOfPropertyPlantAndEquipmentAndIntangibleAssets",
+                        "PurchaseOfPropertyPlantAndEquipmentInvCF",
                         "PurchaseOfPropertyPlantAndEquipment"),
-            get(values, "CashFlowsFromOperatingActivities", "NetCashProvidedByUsedInOperatingActivities"),
-            get(values, "CashFlowsFromInvestingActivities", "NetCashProvidedByUsedInInvestingActivities")
+            get(values, "NetCashProvidedByUsedInOperatingActivities", "CashFlowsFromOperatingActivities"),
+            // EDINET XBRL は "InvestmentActivities"（Investing ではなく Investment）を使用する
+            get(values, "NetCashProvidedByUsedInInvestmentActivities",
+                        "NetCashProvidedByUsedInInvestingActivities",
+                        "CashFlowsFromInvestingActivities")
         );
     }
 

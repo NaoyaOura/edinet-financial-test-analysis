@@ -123,15 +123,46 @@ public class XbrlParser {
     }
 
     /**
-     * 指定ディレクトリ配下から最初に見つかった .xbrl ファイルを返す。
+     * 指定ディレクトリ配下から財務XBRL（PublicDoc 内の jpcrp/jppfs 系）を探して返す。
+     * AuditDoc 内の監査XBRL（jpaud- 等）は財務データを持たないため除外する。
      * 見つからない場合は null を返す。
      */
     public File findXbrlFile(File dir) {
         if (!dir.isDirectory()) return null;
+
+        // PublicDoc ディレクトリを優先して探す
+        File publicDoc = new File(dir, "PublicDoc");
+        if (!publicDoc.isDirectory()) {
+            // XBRL/PublicDoc 形式の場合
+            File xbrlPublicDoc = new File(new File(dir, "XBRL"), "PublicDoc");
+            if (xbrlPublicDoc.isDirectory()) publicDoc = xbrlPublicDoc;
+        }
+
+        if (publicDoc.isDirectory()) {
+            for (File f : publicDoc.listFiles()) {
+                if (f.isFile() && f.getName().endsWith(".xbrl") && isFinancialXbrl(f.getName())) {
+                    return f;
+                }
+            }
+        }
+
+        // PublicDoc が見つからない場合は全体を再帰検索（jpaud- 等は除外）
+        return findXbrlFileRecursive(dir);
+    }
+
+    /**
+     * 財務XBRL かどうかを判定する。監査系ファイル（jpaud-）は除外する。
+     */
+    private boolean isFinancialXbrl(String fileName) {
+        return !fileName.startsWith("jpaud-");
+    }
+
+    private File findXbrlFileRecursive(File dir) {
+        if (!dir.isDirectory()) return null;
         for (File f : dir.listFiles()) {
-            if (f.isFile() && f.getName().endsWith(".xbrl")) return f;
+            if (f.isFile() && f.getName().endsWith(".xbrl") && isFinancialXbrl(f.getName())) return f;
             if (f.isDirectory()) {
-                File found = findXbrlFile(f);
+                File found = findXbrlFileRecursive(f);
                 if (found != null) return found;
             }
         }
