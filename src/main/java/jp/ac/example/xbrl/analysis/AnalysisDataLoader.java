@@ -97,16 +97,20 @@ public class AnalysisDataLoader {
             SELECT
                 f.edinetCode,
                 f.fiscalYear,
-                CASE c.industryCategory
-                    WHEN 'RETAIL' THEN '6100'
-                    WHEN 'IT'     THEN '5250'
-                    ELSE 'UNKNOWN'
-                END AS sector33Code,
-                CASE c.industryCategory
-                    WHEN 'RETAIL' THEN '小売業'
-                    WHEN 'IT'     THEN '情報・通信業'
-                    ELSE 'UNKNOWN'
-                END AS sector33CodeName,
+                COALESCE(jl.sector33Code,
+                    CASE c.industryCategory
+                        WHEN 'RETAIL' THEN '6100'
+                        WHEN 'IT'     THEN '5250'
+                        ELSE 'UNKNOWN'
+                    END
+                ) AS sector33Code,
+                COALESCE(jl.sector33CodeName,
+                    CASE c.industryCategory
+                        WHEN 'RETAIL' THEN '小売業'
+                        WHEN 'IT'     THEN '情報・通信業'
+                        ELSE 'UNKNOWN'
+                    END
+                ) AS sector33CodeName,
                 f.netSales,
                 f.operatingIncome  AS operatingProfit,
                 f.ordinaryIncome   AS ordinaryProfit,
@@ -126,6 +130,10 @@ public class AnalysisDataLoader {
                 ON f.edinetCode = k.edinetCode AND f.fiscalYear = k.fiscalYear
             LEFT JOIN companies c
                 ON f.edinetCode = c.edinetCode
+            LEFT JOIN edinet_jquants_mapping m
+                ON f.edinetCode = m.edinetCode
+            LEFT JOIN jquants_listed_info jl
+                ON m.jquantsCode = jl.code
             WHERE 1=1
             """ + yearFilter + """
 

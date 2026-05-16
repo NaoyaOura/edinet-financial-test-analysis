@@ -95,4 +95,15 @@ public record MergedRecord(
     public double itDummy() {
         return isIT() ? 1.0 : 0.0;
     }
+
+    // ─── 業種×キーワード 交差項 ──────────────────────────────────
+
+    /** dxScore × 情報通信業ダミー */
+    public double dxScoreXit()     { return dxScore * itDummy(); }
+
+    /** aiScore × 情報通信業ダミー */
+    public double aiScoreXit()     { return aiScore * itDummy(); }
+
+    /** dxScore × 小売業ダミー */
+    public double dxScoreXretail() { return dxScore * retailDummy(); }
 }

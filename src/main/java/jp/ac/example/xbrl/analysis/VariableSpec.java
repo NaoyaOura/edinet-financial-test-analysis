@@ -99,6 +99,40 @@ public record VariableSpec(
                 }
             }
         }
+
+        // 業種×キーワード 交差項仕様（主効果をコントロールに含む）
+        List<KeywordVar> crossTerms = List.of(
+            new KeywordVar("dxScore×IT",     MergedRecord::dxScoreXit),
+            new KeywordVar("aiScore×IT",     MergedRecord::aiScoreXit),
+            new KeywordVar("dxScore×retail", MergedRecord::dxScoreXretail)
+        );
+        // 交差項ごとに主効果（スコア本体 + 業種ダミー）をコントロールに追加
+        List<ControlSet> crossControlSets = List.of(
+            new ControlSet(
+                List.of("log(売上高)", "dxScore", "IT_dummy"),
+                List.of(MergedRecord::logNetSales, r -> r.dxScore(), r -> r.itDummy())
+            ),
+            new ControlSet(
+                List.of("log(売上高)", "aiScore", "IT_dummy"),
+                List.of(MergedRecord::logNetSales, r -> r.aiScore(), r -> r.itDummy())
+            ),
+            new ControlSet(
+                List.of("log(売上高)", "dxScore", "retail_dummy"),
+                List.of(MergedRecord::logNetSales, r -> r.dxScore(), r -> r.retailDummy())
+            )
+        );
+        for (OutcomeVar outcome : outcomes) {
+            for (int i = 0; i < crossTerms.size(); i++) {
+                KeywordVar kw = crossTerms.get(i);
+                ControlSet cs = crossControlSets.get(i);
+                specs.add(new VariableSpec(
+                    outcome.label(), outcome.fn(),
+                    kw.label(), kw.fn(),
+                    cs.labels(), cs.fns()
+                ));
+            }
+        }
+
         return specs;
     }
 }

@@ -40,6 +40,7 @@ public class AnalyzeCommand {
         String type       = parseStringOption(args, "--type", "all");
         int fiscalYear    = parseIntOption(args, "--year", 0);
         String outputPath = parseStringOption(args, "--output", config.getOutputDir());
+        String industry   = parseStringOption(args, "--industry", "all");
 
         System.out.println("=== analyze 開始 ===");
 
@@ -57,6 +58,18 @@ public class AnalyzeCommand {
             return;
         }
 
+        // 業種フィルタ
+        records = switch (industry) {
+            case "retail" -> records.stream().filter(MergedRecord::isRetail).toList();
+            case "it"     -> records.stream().filter(MergedRecord::isIT).toList();
+            default       -> records;
+        };
+        String industryLabel = switch (industry) {
+            case "retail" -> "小売業のみ";
+            case "it"     -> "情報通信業のみ";
+            default       -> "全業種";
+        };
+        System.out.printf("業種フィルタ: %s%n", industryLabel);
         System.out.printf("読み込みレコード数: %d件%n", records.size());
 
         if (records.isEmpty()) {
@@ -74,6 +87,12 @@ public class AnalyzeCommand {
 
         try {
             List<String> sections = new ArrayList<>();
+
+            // 分析条件を先頭セクションとして追加
+            sections.add(String.format(
+                "=== 分析条件 ===%n業種フィルタ: %s%n対象レコード数: %d件%n",
+                industryLabel, records.size()
+            ));
 
             switch (type) {
                 case "group-comparison" ->
