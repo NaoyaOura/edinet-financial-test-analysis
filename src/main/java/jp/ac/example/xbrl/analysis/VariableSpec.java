@@ -67,10 +67,15 @@ public record VariableSpec(
             new KeywordVar("totalScore",  r -> r.totalScore()),
             new KeywordVar("genAiScore",  r -> r.genAiScore()),
             new KeywordVar("aiScore",     r -> r.aiScore()),
-            new KeywordVar("dxScore",     r -> r.dxScore())
+            new KeywordVar("dxScore",     r -> r.dxScore()),
+            new KeywordVar("dxMention",   MergedRecord::dxMention),
+            new KeywordVar("aiMention",   MergedRecord::aiMention),
+            new KeywordVar("anyMention",  MergedRecord::anyMention)
         );
 
         // 業種ダミーはダミー変数トラップを避けるため片方のみ投入（小売業D を採用）
+        // コントロールセット①②③: 基本仕様
+        // コントロールセット④⑤: 前期業績追加（逆因果検証用）
         List<ControlSet> controlSets = List.of(
             new ControlSet(
                 List.of("log(売上高)", "小売業D"),
@@ -83,6 +88,16 @@ public record VariableSpec(
             new ControlSet(
                 List.of("log(売上高)", "自己資本比率", "小売業D"),
                 List.of(MergedRecord::logNetSales, MergedRecord::equityRatio,
+                        r -> r.retailDummy())
+            ),
+            new ControlSet(
+                List.of("log(売上高)", "前期営業利益率", "小売業D"),
+                List.of(MergedRecord::logNetSales, MergedRecord::operatingMargin,
+                        r -> r.retailDummy())
+            ),
+            new ControlSet(
+                List.of("log(売上高)", "前期ROA", "小売業D"),
+                List.of(MergedRecord::logNetSales, MergedRecord::roa,
                         r -> r.retailDummy())
             )
         );

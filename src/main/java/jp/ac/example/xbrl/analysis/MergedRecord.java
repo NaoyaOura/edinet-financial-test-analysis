@@ -96,6 +96,17 @@ public record MergedRecord(
         return isIT() ? 1.0 : 0.0;
     }
 
+    // ─── 二値言及変数 ─────────────────────────────────────────────
+
+    /** DX言及あり（dxScore > 0 なら 1.0） */
+    public double dxMention()  { return dxScore   > 0 ? 1.0 : 0.0; }
+
+    /** AI言及あり（aiScore > 0 なら 1.0） */
+    public double aiMention()  { return aiScore   > 0 ? 1.0 : 0.0; }
+
+    /** いずれか言及あり（totalScore > 0 なら 1.0） */
+    public double anyMention() { return totalScore > 0 ? 1.0 : 0.0; }
+
     // ─── 業種×キーワード 交差項 ──────────────────────────────────
 
     /** dxScore × 情報通信業ダミー */

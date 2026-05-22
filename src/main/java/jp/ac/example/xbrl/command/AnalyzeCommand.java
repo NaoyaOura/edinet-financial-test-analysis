@@ -3,6 +3,7 @@ package jp.ac.example.xbrl.command;
 import jp.ac.example.xbrl.analysis.AnalysisDataLoader;
 import jp.ac.example.xbrl.analysis.DifferenceInDifferences;
 import jp.ac.example.xbrl.analysis.GroupComparator;
+import jp.ac.example.xbrl.analysis.IndustryScanAnalyzer;
 import jp.ac.example.xbrl.analysis.LagRegressionAnalyzer;
 import jp.ac.example.xbrl.analysis.MergedRecord;
 import jp.ac.example.xbrl.analysis.MultiModelAnalyzer;
@@ -20,11 +21,13 @@ import java.util.List;
  * 統計分析を実行してレポートを出力するコマンド。
  *
  * 使い方:
- *   analyze [--type group-comparison|lag-regression|did|panel|all]
+ *   analyze [--type group-comparison|lag-regression|did|panel|all|industry-scan]
  *           [--year <年度>] [--output <ディレクトリ>]
+ *           [--industry retail|it|all] [--exclude-unknown]
  *
  * --type のデフォルトは all。
  * --year は group-comparison・did のデータフィルタに使用する。
+ * --exclude-unknown を指定すると sector33Code='UNKNOWN' の企業を除外する。
  */
 public class AnalyzeCommand {
 
@@ -37,21 +40,23 @@ public class AnalyzeCommand {
     }
 
     public void execute(String[] args) {
-        String type       = parseStringOption(args, "--type", "all");
-        int fiscalYear    = parseIntOption(args, "--year", 0);
-        String outputPath = parseStringOption(args, "--output", config.getOutputDir());
-        String industry   = parseStringOption(args, "--industry", "all");
+        String type          = parseStringOption(args, "--type", "all");
+        int fiscalYear       = parseIntOption(args, "--year", 0);
+        String outputPath    = parseStringOption(args, "--output", config.getOutputDir());
+        String industry      = parseStringOption(args, "--industry", "all");
+        boolean excludeUnknown = hasFlag(args, "--exclude-unknown");
 
         System.out.println("=== analyze 開始 ===");
 
         List<MergedRecord> records;
         try (Connection conn = dbManager.getConnection()) {
             AnalysisDataLoader loader = new AnalysisDataLoader(conn);
-            // lag-regression / panel / explore / all は全年度のデータが必要
+            // lag-regression / panel / explore / all / industry-scan は全年度のデータが必要
             boolean needAllYears = type.equals("lag-regression")
                 || type.equals("panel")
                 || type.equals("explore")
-                || type.equals("all");
+                || type.equals("all")
+                || type.equals("industry-scan");
             records = loader.load(needAllYears ? 0 : fiscalYear);
         } catch (Exception e) {
             System.err.println("データの読み込みに失敗しました: " + e.getMessage());
@@ -69,7 +74,18 @@ public class AnalyzeCommand {
             case "it"     -> "情報通信業のみ";
             default       -> "全業種";
         };
-        System.out.printf("業種フィルタ: %s%n", industryLabel);
+        // UNKNOWN業種除外
+        if (excludeUnknown) {
+            int before = records.size();
+            records = records.stream()
+                .filter(r -> !"UNKNOWN".equals(r.sector33Code()))
+                .toList();
+            System.out.printf("UNKNOWN除外: %d件 → %d件（除外: %d件）%n",
+                before, records.size(), before - records.size());
+        }
+
+        System.out.printf("業種フィルタ: %s%s%n",
+            industryLabel, excludeUnknown ? "（UNKNOWN除外）" : "");
         System.out.printf("読み込みレコード数: %d件%n", records.size());
 
         if (records.isEmpty()) {
@@ -90,8 +106,10 @@ public class AnalyzeCommand {
 
             // 分析条件を先頭セクションとして追加
             sections.add(String.format(
-                "=== 分析条件 ===%n業種フィルタ: %s%n対象レコード数: %d件%n",
-                industryLabel, records.size()
+                "=== 分析条件 ===%n業種フィルタ: %s%nUNKNOWN除外: %s%n対象レコード数: %d件%n",
+                industryLabel,
+                excludeUnknown ? "あり" : "なし",
+                records.size()
             ));
 
             switch (type) {
@@ -107,6 +125,8 @@ public class AnalyzeCommand {
                     sections.add(new PanelDataAnalyzer().analyze(records));
                 case "explore" ->
                     sections.add(new MultiModelAnalyzer().analyze(records));
+                case "industry-scan" ->
+                    sections.add(new IndustryScanAnalyzer().analyze(records));
                 case "all" -> {
                     sections.add(new GroupComparator().formatReport(filteredRecords));
                     sections.add(new LagRegressionAnalyzer().analyze(records));
@@ -118,7 +138,7 @@ public class AnalyzeCommand {
                 }
                 default -> {
                     System.err.println("不明な --type: " + type +
-                        "（group-comparison / lag-regression / did / panel / explore / all のいずれかを指定してください）");
+                        "（group-comparison / lag-regression / did / panel / explore / industry-scan / all のいずれかを指定してください）");
                     return;
                 }
             }
@@ -148,5 +168,12 @@ public class AnalyzeCommand {
             }
         }
         return defaultValue;
+    }
+
+    private boolean hasFlag(String[] args, String flag) {
+        for (String arg : args) {
+            if (flag.equals(arg)) return true;
+        }
+        return false;
     }
 }
